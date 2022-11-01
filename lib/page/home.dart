@@ -108,8 +108,17 @@ class _HomeState extends State<Home> {
         onLongPress: () {
           print("long pressed");
         },
-        child: Row(
-          children: [Text("아라동"), Icon(Icons.arrow_drop_down)],
+        child: PopupMenuButton(
+          itemBuilder: (context) {
+            return [
+              PopupMenuItem(value: "ara", child: Text("아라동")),
+              PopupMenuItem(value: "ora", child: Text("오라동")),
+              PopupMenuItem(value: "donam", child: Text("도남동")),
+            ];
+          },
+          child: Row(
+            children: [Text("아라동"), Icon(Icons.arrow_drop_down)],
+          ),
         ),
       ),
       elevation: 1,
