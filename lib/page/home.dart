@@ -1,3 +1,4 @@
+import 'package:carrot_market_flutter/page/detail.dart';
 import 'package:carrot_market_flutter/repository/contents_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -94,56 +95,69 @@ class _HomeState extends State<Home> {
     return ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         itemBuilder: ((context, index) {
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  child: Image.asset(
-                    datas[index]["image"]!,
-                    width: 100,
-                    height: 100,
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    height: 100,
-                    padding: const EdgeInsets.only(left: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          datas[index]["title"]!,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 15),
-                        ),
-                        Text(datas[index]["location"]!,
-                            style: const TextStyle(
-                                fontSize: 15,
-                                color: Color.fromARGB(255, 189, 188, 188))),
-                        Text(calcStringToWon(datas[index]["price"]!)),
-                        Expanded(
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                SvgPicture.asset(
-                                  "assets/svg/heart_off.svg",
-                                  width: 13,
-                                  height: 13,
-                                ),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                Text(datas[index]["likes"]!)
-                              ]),
-                        ),
-                      ],
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (context) {
+                  return DetailContentView(data: datas[index]);
+                },
+              ));
+              print(datas[index]["title"]!);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    child: Hero(
+                      tag: datas[index]["cid"]!,
+                      child: Image.asset(
+                        datas[index]["image"]!,
+                        width: 100,
+                        height: 100,
+                      ),
                     ),
                   ),
-                )
-              ],
+                  Expanded(
+                    child: Container(
+                      height: 100,
+                      padding: const EdgeInsets.only(left: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            datas[index]["title"]!,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 15),
+                          ),
+                          Text(datas[index]["location"]!,
+                              style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color.fromARGB(255, 189, 188, 188))),
+                          Text(calcStringToWon(datas[index]["price"]!)),
+                          Expanded(
+                            child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  SvgPicture.asset(
+                                    "assets/svg/heart_off.svg",
+                                    width: 13,
+                                    height: 13,
+                                  ),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text(datas[index]["likes"]!)
+                                ]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
           );
         }),
