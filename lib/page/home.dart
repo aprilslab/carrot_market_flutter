@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
+import '../utils/data_utils.dart';
+
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -81,12 +83,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  final oCcy = NumberFormat("#,###", "ko_KR");
-  String calcStringToWon(String priceString) {
-    if (priceString == "무료나눔") return priceString;
-    return "${oCcy.format(int.parse(priceString))}원";
-  }
-
   _loadContents() {
     return contentsRepository.loadContentsFromLocation(currentLocation);
   }
@@ -135,7 +131,8 @@ class _HomeState extends State<Home> {
                               style: const TextStyle(
                                   fontSize: 15,
                                   color: Color.fromARGB(255, 189, 188, 188))),
-                          Text(calcStringToWon(datas[index]["price"]!)),
+                          Text(DataUtils.calcStringToWon(
+                              datas[index]["price"]!)),
                           Expanded(
                             child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,

@@ -2,8 +2,10 @@ import 'dart:ui';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 import '../components/manor_temperature_widget.dart';
+import '../utils/data_utils.dart';
 
 class DetailContentView extends StatefulWidget {
   Map<String, String> data;
@@ -13,10 +15,37 @@ class DetailContentView extends StatefulWidget {
   State<DetailContentView> createState() => _DetailContentViewState();
 }
 
-class _DetailContentViewState extends State<DetailContentView> {
+class _DetailContentViewState extends State<DetailContentView>
+    with SingleTickerProviderStateMixin {
   late Size size;
   late List<Map<String, String>> imgList;
   int _current = 0;
+  double scrollpositionToAlpha = 0;
+  final ScrollController _controller = ScrollController();
+  late AnimationController _animationController;
+  late Animation _colorTween;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(vsync: this);
+    _colorTween = ColorTween(
+      begin: Colors.white,
+      end: Colors.black,
+    ).animate(_animationController);
+    _controller.addListener(() {
+      setState(() {
+        if (0 > _controller.offset) {
+          scrollpositionToAlpha = 0;
+        } else if (_controller.offset >= 255) {
+          scrollpositionToAlpha = 255;
+        } else {
+          scrollpositionToAlpha = _controller.offset;
+        }
+        _animationController.value = scrollpositionToAlpha / 255; //0~1
+      });
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -31,25 +60,25 @@ class _DetailContentViewState extends State<DetailContentView> {
     ];
   }
 
+  Widget _makeIcon(IconData icon) {
+    return AnimatedBuilder(
+      animation: _colorTween,
+      builder: (context, child) => Icon(icon, color: _colorTween.value),
+    );
+  }
+
   AppBar _appbarWidget() {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white.withAlpha(scrollpositionToAlpha.toInt()),
       elevation: 0,
       leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          )),
+          icon: _makeIcon(Icons.arrow_back)),
       actions: [
-        IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.share, color: Colors.white)),
-        IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert, color: Colors.white)),
+        IconButton(onPressed: () {}, icon: _makeIcon(Icons.share)),
+        IconButton(onPressed: () {}, icon: _makeIcon(Icons.more_vert)),
       ],
     );
   }
@@ -213,25 +242,115 @@ class _DetailContentViewState extends State<DetailContentView> {
   }
 
   Widget _bodyWidget() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _makeSliderImage(),
-          _sellerSimpleInfo(),
-          _line(),
-          _contentDetail(),
-          _line(),
-          _otherCelContent(),
-        ],
+    return CustomScrollView(controller: _controller, slivers: [
+      SliverList(
+        delegate: SliverChildListDelegate(
+          [
+            _makeSliderImage(),
+            _sellerSimpleInfo(),
+            _line(),
+            _contentDetail(),
+            _line(),
+            _otherCelContent(),
+          ],
+        ),
       ),
-    );
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        sliver: SliverGrid(
+            delegate: SliverChildListDelegate(List.generate(20, (index) {
+              return Container(
+                child: Column(
+                  children: [
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              color: Colors.grey,
+                              height: 120,
+                            ),
+                          ),
+                          const Text("상품 제목", style: TextStyle(fontSize: 14)),
+                          const Text("금액  ", style: TextStyle(fontSize: 14)),
+                        ]),
+                  ],
+                ),
+              );
+            })),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+            )),
+      )
+    ]);
   }
 
   Widget _bottomBarWidget() {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
       width: size.width,
       height: 55,
-      color: Colors.red,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              print("관심상품 이벤트 발생");
+            },
+            child: SvgPicture.asset(
+              "assets/svg/heart_off.svg",
+              width: 25,
+              height: 25,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 15, right: 10),
+            width: 1,
+            height: 40,
+            color: Colors.grey.withOpacity(0.3),
+          ),
+          Column(
+            children: [
+              Text(
+                DataUtils.calcStringToWon(widget.data["price"]!),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Text(
+                "가격 제안 불가",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+              child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: const Color(0xfff08f4f),
+                ),
+                child: const Text("채팅으로 거래하기",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    )),
+              ),
+            ],
+          ))
+        ],
+      ),
     );
   }
 
