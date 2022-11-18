@@ -2,7 +2,6 @@ import 'package:carrot_market_flutter/page/detail.dart';
 import 'package:carrot_market_flutter/repository/contents_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:intl/intl.dart';
 
 import '../utils/data_utils.dart';
 

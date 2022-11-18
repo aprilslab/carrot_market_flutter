@@ -1,10 +1,9 @@
-import 'dart:ui';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../components/manor_temperature_widget.dart';
+import '../repository/contents_repository.dart';
 import '../utils/data_utils.dart';
 
 class DetailContentView extends StatefulWidget {
@@ -24,10 +23,13 @@ class _DetailContentViewState extends State<DetailContentView>
   final ScrollController _controller = ScrollController();
   late AnimationController _animationController;
   late Animation _colorTween;
+  bool isMyFavoritContent = false;
+  late ContentsRepository contentsRepository;
 
   @override
   void initState() {
     super.initState();
+    contentsRepository = ContentsRepository();
     _animationController = AnimationController(vsync: this);
     _colorTween = ColorTween(
       begin: Colors.white,
@@ -44,6 +46,15 @@ class _DetailContentViewState extends State<DetailContentView>
         }
         _animationController.value = scrollpositionToAlpha / 255; //0~1
       });
+    });
+    _loadMyFavoritContentState();
+  }
+
+  _loadMyFavoritContentState() async {
+    bool? ck =
+        await contentsRepository.isMyFavoritContents(widget.data["cid"]!);
+    setState(() {
+      isMyFavoritContent = ck ?? false;
     });
   }
 
@@ -84,58 +95,56 @@ class _DetailContentViewState extends State<DetailContentView>
   }
 
   Widget _makeSliderImage() {
-    return Container(
-      child: Stack(
-        children: [
-          Hero(
-            tag: widget.data["cid"]!,
-            child: CarouselSlider(
-              options: CarouselOptions(
-                height: size.width,
-                initialPage: 0,
-                enableInfiniteScroll: false,
-                viewportFraction: 1,
-                onPageChanged: (index, reason) {
-                  setState(() {
-                    _current = index;
-                  });
-                },
-              ),
-              items: imgList.map((map) {
-                return Image.asset(
-                  map["url"]!,
-                  width: size.width,
-                  fit: BoxFit.fill,
-                );
-              }).toList(),
+    return Stack(
+      children: [
+        Hero(
+          tag: widget.data["cid"]!,
+          child: CarouselSlider(
+            options: CarouselOptions(
+              height: size.width,
+              initialPage: 0,
+              enableInfiniteScroll: false,
+              viewportFraction: 1,
+              onPageChanged: (index, reason) {
+                setState(() {
+                  _current = index;
+                });
+              },
             ),
+            items: imgList.map((map) {
+              return Image.asset(
+                map["url"]!,
+                width: size.width,
+                fit: BoxFit.fill,
+              );
+            }).toList(),
           ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: imgList.map((map) {
-                return GestureDetector(
-                  child: Container(
-                    width: 8.0,
-                    height: 8.0,
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 5.0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _current == int.parse(map["id"]!)
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.4),
-                    ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: imgList.map((map) {
+              return GestureDetector(
+                child: Container(
+                  width: 8.0,
+                  height: 8.0,
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 10.0, horizontal: 5.0),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _current == int.parse(map["id"]!)
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -296,13 +305,29 @@ class _DetailContentViewState extends State<DetailContentView>
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {
-              print("관심상품 이벤트 발생");
+            onTap: () async {
+              setState(() {
+                if (isMyFavoritContent) {
+                  contentsRepository
+                      .deleteMyFavoritContent(widget.data["cid"]!);
+                } else {
+                  contentsRepository.addMyFavoritContent(widget.data);
+                }
+
+                isMyFavoritContent = !isMyFavoritContent;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  duration: const Duration(milliseconds: 1000),
+                  content: Text(
+                      isMyFavoritContent ? "관심목록에 추가됐습니다." : "관심목록에 제거됐습니다.")));
             },
             child: SvgPicture.asset(
-              "assets/svg/heart_off.svg",
+              isMyFavoritContent
+                  ? "assets/svg/heart_on.svg"
+                  : "assets/svg/heart_off.svg",
               width: 25,
               height: 25,
+              color: const Color(0xfff08f4f),
             ),
           ),
           Container(
